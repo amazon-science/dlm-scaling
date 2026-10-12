@@ -1,0 +1,71 @@
+Revisiting the 16x Pretraining Compute Gap between Diffusion and Autoregressive
+Language Models
+Copyright 2026 Guanghan Wang, Bing He, Zhan Shi, Benoit Dumoulin, Hanqing Lu,
+Volodymyr Kuleshov.
+
+The contents of this repository are released under the Creative Commons
+Attribution-NonCommercial 4.0 International license (CC BY-NC 4.0); see LICENSE.
+
+
+THIRD-PARTY CODE
+================
+
+This repository contains and builds upon third-party code, which remains under
+its own license. A copy of the Apache License 2.0 is included as
+LICENSE-APACHE-2.0.
+
+* SMDM -- "Scaling up Masked Diffusion Models on Text" (Nie et al., 2025),
+  https://github.com/ML-GSAI/SMDM, Apache-2.0.
+  This repository started as a fork of SMDM. `lit_gpt/`, `pretrain/train_ar.py`,
+  `pretrain/train_mdm.py`, `eval/evaluate_ar.py`, `eval/evaluate_mdm.py` and
+  `scripts/prepare_slimpajama.py` derive from it, as do the model-size ladder and
+  the training hyperparameters.
+
+* TinyLlama (Zhang et al., 2024), https://github.com/jzhang38/TinyLlama, and
+  lit-gpt / litgpt (Lightning AI), https://github.com/Lightning-AI/litgpt,
+  Apache-2.0.
+  `lit_gpt/` (model, config, packed_dataset, tokenizer, speed_monitor, utils,
+  rmsnorm, fused_cross_entropy, fused_rotary_embedding) derives from these, via
+  SMDM. The pretraining tokenizer is TinyLlama's.
+
+* nanoGPT (Karpathy, 2022), https://github.com/karpathy/nanoGPT, MIT.
+  The training loop and the cosine learning-rate schedule derive from it, via
+  lit-gpt.
+
+The methods this study implements and compares are described in:
+BD3LM, "Block Diffusion" (Arriola et al., 2025); E2D2 (Arriola et al., 2026);
+and DUEL (Turok et al., 2026).
+
+
+THIRD-PARTY DEPENDENCIES
+========================
+
+Not vendored here, installed from source or PyPI (see Dockerfile / CONDA.md /
+environment.yaml):
+
+  PyTorch 2.4.1 (BSD-3-Clause), Lightning 2.1.2 (Apache-2.0),
+  FlashAttention 2.6.3 (BSD-3-Clause), xFormers 0.0.28 (BSD-3-Clause),
+  Transformers 4.31.0 (Apache-2.0), Datasets 3.0.1 (Apache-2.0),
+  SentencePiece (Apache-2.0), lm-evaluation-harness 0.4.4 (MIT),
+  GPT-NeoX (Apache-2.0).
+
+
+DATA AND BENCHMARKS
+===================
+
+No dataset is redistributed here; `scripts/prepare_slimpajama.py` downloads
+SlimPajama and the evaluation scripts let lm-evaluation-harness download the
+benchmarks. Their licenses are:
+
+  SlimPajama-627B (Soboleva et al., 2023)   Apache-2.0
+  HellaSwag (Zellers et al., 2019)          MIT
+  ARC-easy (Clark et al., 2018)             CC BY-SA 4.0
+  PIQA (Bisk et al., 2020)                  AFL-3.0
+  SciQ (Welbl et al., 2017)                 CC BY-NC 3.0
+  RACE (Lai et al., 2017)                   Apache-2.0
+  SIQA (Sap et al., 2019)                   CC BY 4.0
+  OpenBookQA (Mihaylov et al., 2018)        Apache-2.0
+  LAMBADA (Paperno et al., 2016)            CC BY 4.0
+  WinoGrande (Sakaguchi et al., 2021)       Apache-2.0
+  BoolQ (Clark et al., 2019)                CC BY-SA 3.0
+  COPA (Roemmele et al., 2011)              BSD-2-Clause

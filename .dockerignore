@@ -1,0 +1,9 @@
+.git
+workdir
+imgs
+data
+models
+logs
+out
+__pycache__
+*.pyc

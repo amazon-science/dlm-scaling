@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+logs
+out
+workdir
+wandb
+data/slim_star_combined
+models
+*.pth
+*.safetensors
+
+# the paper PDF is distributed from the project page, not from this repo
+paper.pdf
