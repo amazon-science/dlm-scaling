@@ -9,6 +9,13 @@
 # The example below is the compute-optimal MDM cell at C = 1e20. Point CKPT at your own run
 # (converted to .safetensors with scripts/pth_to_safetensors.py --arch mdm) and set MODEL.
 #
+# ⚠️ race REPORTS acc_norm ONLY WITH THE PATCH -- lm_eval's race.yaml declares
+#    `metric_list: [acc]`. evaluate_mdm.py's __main__ calls patch_extra_acc_norm()
+#    (E2D2_ACC_NORM_TASKS, default "race") itself, so there is nothing to pass here. It also
+#    calls patch_bootstrap_stderr(), which is NOT optional for lambada_standard: without it
+#    lm_eval 0.4.4 forks mp.cpu_count() workers (the HOST core count, not the container's cpu
+#    limit) and deadlocks at 0% GPU after every forward has already completed.
+#    E2D2_BOOTSTRAP_WORKERS caps the pool (default 8).
 # ⚠️ TASK NAMES / ENV. It is `winogrande`, not `winogrande_xl` (the latter is the HF dataset
 #    CONFIG name; lm_eval aborts with "Tasks not found" before scoring anything). `social_iqa`
 #    needs HF_DATASETS_TRUST_REMOTE_CODE=true in the environment (custom loading script, which
@@ -22,6 +29,8 @@ MODEL=944
 CKPT=workdir/mdm-944M-100.0flop-lowvar/iter-027637-ckpt.safetensors
 
 export HF_DATASETS_TRUST_REMOTE_CODE=true
+export E2D2_BOOTSTRAP_WORKERS=8
+export E2D2_ACC_NORM_TASKS=race
 
 # --- 1 of 3: DUEL, the exact conditional likelihood ----------------------------------------
 #
@@ -38,9 +47,6 @@ export HF_DATASETS_TRUST_REMOTE_CODE=true
 #    (~1 forward/request) -- a different reveal order, so a different number, not a faster
 #    route to this one.
 # ⚠️ NO --batch_size: the duel path does not read it (only mc and chain_rule do).
-# ⚠️ race REPORTS acc ONLY here. lm_eval's race.yaml declares `metric_list: [acc]` and
-#    evaluate_mdm.py's __main__ is a bare cli_evaluate() with no patch_extra_acc_norm()
-#    (unlike evaluate_bd3lm.py / evaluate_e2d2.py), so this run cannot fill race's acc_norm.
 
 python eval/evaluate_mdm.py \
   --tasks copa,hellaswag,piqa,sciq,arc_easy,social_iqa,race,openbookqa,boolq,winogrande \

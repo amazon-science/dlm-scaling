@@ -53,22 +53,25 @@ E2D2.
 
 Every model in the paper was trained and evaluated with PyTorch 2.4.1 on CUDA 12.1, and the
 code additionally needs Flash Attention 2.6.3 together with its `rotary`, `layer_norm` and
-`xentropy` CUDA extensions, xFormers 0.0.28, and lm-evaluation-harness 0.4.4. There are three
-equivalent ways to get that environment. The first is to build the image we used for all of
-the runs:
+`xentropy` CUDA extensions, xFormers 0.0.28, and lm-evaluation-harness 0.4.4. The
+[Dockerfile](Dockerfile) is the reference definition of that environment, and building it is
+the one path that needs no further steps:
 
 ```sh
 docker build -t dlm-scaling .
 ```
 
-The second is to recreate the frozen conda environment of that image:
+[environment.yaml](environment.yaml) is the fully resolved lock of the same environment, down
+to transitive dependencies:
 
 ```sh
 conda env create -f environment.yaml
 ```
 
-If you would rather install the dependencies one by one, [CONDA.md](CONDA.md) walks through the
-same environment step by step.
+It installs everything except Flash Attention and its three CUDA extensions, which are not
+available from PyPI and have to be compiled locally; step 3 of [CONDA.md](CONDA.md) does that,
+and the rest of that file walks through the same environment one package at a time, at the same
+pins, if you would rather not use either of the two files above.
 
 ## Data
 

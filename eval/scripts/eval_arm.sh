@@ -27,6 +27,13 @@
 # request at a time. lambada needs no `greddy` flag either -- suffix_greedy_prediction()
 # runs unconditionally and lm_eval scores lambada's acc from it.
 #
+# ⚠️ race REPORTS acc_norm ONLY WITH THE PATCH -- lm_eval's race.yaml declares
+#    `metric_list: [acc]`. evaluate_ar.py's __main__ calls patch_extra_acc_norm()
+#    (E2D2_ACC_NORM_TASKS, default "race") itself, so there is nothing to pass here. It also
+#    calls patch_bootstrap_stderr(), which is NOT optional for lambada_standard: without it
+#    lm_eval 0.4.4 forks mp.cpu_count() workers (the HOST core count, not the container's cpu
+#    limit) and deadlocks at 0% GPU after every forward has already completed.
+#    E2D2_BOOTSTRAP_WORKERS caps the pool (default 8).
 # ⚠️ TASK NAMES / ENV. It is `winogrande`, not `winogrande_xl` (the latter is the HF dataset
 #    CONFIG name; lm_eval aborts with "Tasks not found"). `social_iqa` has a custom loading
 #    script, so it needs HF_DATASETS_TRUST_REMOTE_CODE=true in the environment -- never
@@ -40,51 +47,14 @@ export HF_DATASETS_TRUST_REMOTE_CODE=true
 export E2D2_BOOTSTRAP_WORKERS=8
 export E2D2_ACC_NORM_TASKS=race
 
-# --- why these two commands go through a wrapper ------------------------------------------
-#
-# evaluate_ar.py's __main__ is a bare cli_evaluate(), while the diffusion entry points call
-# two lm_eval patches first. Both patches are model-agnostic (they patch lm_eval, not the
-# model) and both are needed here as well:
-#
-#   patch_extra_acc_norm()   lm_eval's race.yaml declares `metric_list: [acc]`, which
-#                            suppresses the acc_norm the harness already computed. Without
-#                            this, race is the one task of the ten with no acc_norm row --
-#                            and acc_norm is the metric race is reported at.
-#   patch_bootstrap_stderr() lm_eval 0.4.4 does mp.Pool(mp.cpu_count()), and cpu_count() is
-#                            the HOST core count, not the container's cpu limit. Forking
-#                            that many copies of a process holding CUDA and a loaded model
-#                            exhausts the fd table and multiprocessing then spins forever:
-#                            a deadlock at 0% GPU with the results table unprinted, after
-#                            every forward has already finished. Only metrics with no
-#                            closed-form stderr take that path -- perplexity, i.e.
-#                            lambada_standard -- so the risk is confined to the second
-#                            command, but it is the same risk. E2D2_BOOTSTRAP_WORKERS caps
-#                            the pool (default 8).
-#
-# lm_eval 0.4.4 exposes no --bootstrap_iters CLI flag, so neither fix is reachable from the
-# command line. Importing evaluate_ar registers @register_model("ar"). Run from the repo root.
+# Two commands, not three: there is no second scorer to run. Run from the repo root.
 
-run_ar() {
-  python - "$@" <<'PY'
-import sys
-sys.path.insert(0, 'eval')   # run from the repo root; the evaluators live in eval/
-
-import evaluate_ar  # registers @register_model("ar")
-from evaluate_e2d2 import patch_bootstrap_stderr, patch_extra_acc_norm
-from lm_eval.__main__ import cli_evaluate
-
-patch_bootstrap_stderr()
-patch_extra_acc_norm()
-cli_evaluate()
-PY
-}
-
-run_ar \
+python eval/evaluate_ar.py \
   --tasks copa,hellaswag,piqa,sciq,arc_easy,social_iqa,race,openbookqa,boolq,winogrande \
   --model ar \
   --model_args model_name=$MODEL,ckpt_path=$CKPT
 
-run_ar \
+python eval/evaluate_ar.py \
   --tasks lambada_standard \
   --model ar \
   --model_args model_name=$MODEL,ckpt_path=$CKPT

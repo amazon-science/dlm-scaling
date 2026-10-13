@@ -26,6 +26,11 @@ sys.path.append(str(Path(__file__).parent.parent.resolve()))
 from lit_gpt.diffmodel import TransEncoder, Config
 from safetensors.torch import load_file
 
+# Both patches fix lm_eval 0.4.4 itself, not a model, and neither is reachable from the CLI,
+# so every entry point has to apply them. They live in evaluate_e2d2.py; nothing else is
+# shared with it (the MDM likelihood core is local to this file).
+from evaluate_e2d2 import patch_bootstrap_stderr, patch_extra_acc_norm
+
 
 def set_seed(seed):
     torch.manual_seed(seed)
@@ -378,4 +383,8 @@ class MDMEvalHarness(LM):
 
 if __name__ == "__main__":
     set_seed(1234)
+    # patch_bootstrap_stderr is not optional for lambada_standard: without it lm_eval 0.4.4
+    # deadlocks after every forward has completed.
+    patch_bootstrap_stderr()
+    patch_extra_acc_norm()
     cli_evaluate()
