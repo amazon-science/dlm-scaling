@@ -1,5 +1,6 @@
 # Revisiting the 16× Pretraining Compute Gap between Diffusion and Autoregressive Language Models
 
+[![arXiv](https://img.shields.io/badge/arXiv-2610.17590-b31b1b)](https://arxiv.org/abs/2610.17590)
 [![project page](https://img.shields.io/badge/project%20page-dlm--scaling-blue)](https://guanghanwang.com/dlm-scaling)
 [![license](https://img.shields.io/badge/license-CC--BY--NC--4.0-green)](LICENSE)
 
@@ -186,7 +187,7 @@ where, along with the licenses of the dependencies, the training data and the be
              Autoregressive Language Models},
   author  = {Wang, Guanghan and He, Bing and Shi, Zhan and Dumoulin, Benoit and
              Lu, Hanqing and Kuleshov, Volodymyr},
-  journal = {arXiv preprint},
+  journal = {arXiv preprint arXiv:2610.17590},
   year    = {2026}
 }
 ```
